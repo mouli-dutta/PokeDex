@@ -97,10 +97,46 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            perspective: 1000px;
+            gap: 10px;
+        }
+
+        .flip-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s ease-in-out;
+            min-height: 0;
+        }
+
+        .flip-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            backface-visibility: hidden;
+            position: absolute;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .card-front {
+            z-index: 2;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            z-index: 1;
         }
 
         .pokemon-image-area {
-            height: 50%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -108,6 +144,7 @@
             background: #ffffff;
             border-radius: 4px;
             border: 1px solid #d0d0d0;
+            flex-shrink: 0;
         }
 
         .pokemon-image {
@@ -124,14 +161,16 @@
             font-weight: bold;
             font-size: 14px;
             color: #000;
-            margin-bottom: 12px;
+            margin-bottom: 0;
             letter-spacing: 1px;
+            padding: 8px 0;
         }
 
         .controls {
             display: flex;
             flex-direction: column;
             gap: 8px;
+            flex-shrink: 0;
         }
 
         .search-box {
@@ -186,25 +225,22 @@
         }
 
         .details-section {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #999;
+            background: #ffffff;
+            border-radius: 4px;
+            border: 1px solid #d0d0d0;
             font-size: 11px;
             color: #333;
-            max-height: 120px;
+            padding: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             overflow-y: auto;
-            background: #f5f5f5;
-            border-radius: 3px;
-            padding: 8px;
-            display: none;
-        }
-
-        .details-section.show {
-            display: block;
         }
 
         .detail-item {
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            line-height: 1.4;
         }
 
         .detail-label {
@@ -261,11 +297,42 @@
         </div>
 
         <div class="screen-container">
-            <div class="pokemon-image-area">
-                <img id="pokemonImage" class="pokemon-image" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png" alt="Pokémon">
-            </div>
+            <div class="flip-card">
+                <!-- FRONT OF CARD -->
+                <div class="card-front">
+                    <div class="pokemon-image-area">
+                        <img id="pokemonImage" class="pokemon-image" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png" alt="Pokémon">
+                    </div>
 
-            <div class="caption" id="caption">#001 – Bulbasaur</div>
+                    <div class="caption" id="caption">#001 – Bulbasaur</div>
+                </div>
+
+                <!-- BACK OF CARD -->
+                <div class="card-back">
+                    <div class="details-section" id="detailsSection">
+                        <div class="detail-item">
+                            <span class="detail-label">Type:</span>
+                            <span class="detail-value" id="typeDetail">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Abilities:</span>
+                            <span class="detail-value" id="abilitiesDetail">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Sp.Atk:</span>
+                            <span class="detail-value" id="spatkDetail">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Sp.Def:</span>
+                            <span class="detail-value" id="spdefDetail">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Speed:</span>
+                            <span class="detail-value" id="speedDetail">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="controls">
                 <div class="search-box">
@@ -278,29 +345,6 @@
                     <button onclick="previousPokemon()">Previous</button>
                     <button onclick="nextPokemon()">Next</button>
                     <button onclick="randomPokemon()">Random</button>
-                </div>
-
-                <div class="details-section" id="detailsSection">
-                    <div class="detail-item">
-                        <span class="detail-label">Type:</span>
-                        <span class="detail-value" id="typeDetail">-</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Abilities:</span>
-                        <span class="detail-value" id="abilitiesDetail">-</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Sp.Atk:</span>
-                        <span class="detail-value" id="spatkDetail">-</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Sp.Def:</span>
-                        <span class="detail-value" id="spdefDetail">-</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Speed:</span>
-                        <span class="detail-value" id="speedDetail">-</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -327,8 +371,8 @@
                 const data = await response.json();
                 currentPokemonId = data.id;
 
+                document.querySelector('.flip-card').classList.remove('flipped');
                 updateUI(data);
-                document.getElementById('detailsSection').classList.remove('show');
             } catch (error) {
                 debug(`ERROR: ${error.message}`);
                 document.getElementById('caption').textContent = 'Not found';
@@ -396,7 +440,7 @@
         }
 
         function toggleDetails() {
-            document.getElementById('detailsSection').classList.toggle('show');
+            document.querySelector('.flip-card').classList.toggle('flipped');
         }
 
         document.getElementById('searchInput').addEventListener('keypress', function (e) {
