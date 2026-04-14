@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokédex v2</title>
+    <title>Pokédex</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -101,36 +102,33 @@
             gap: 10px;
         }
 
-        .flip-card {
+        .image-flip-container {
             flex: 1;
-            display: flex;
-            flex-direction: column;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.6s ease-in-out;
             min-height: 0;
         }
 
-        .flip-card.flipped {
+        .image-flip-container.flipped {
             transform: rotateY(180deg);
         }
 
-        .card-front,
-        .card-back {
+        .image-front,
+        .image-back {
             width: 100%;
             height: 100%;
-            display: flex;
-            flex-direction: column;
-            backface-visibility: hidden;
             position: absolute;
+            backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            border-radius: 4px;
         }
 
-        .card-front {
+        .image-front {
             z-index: 2;
         }
 
-        .card-back {
+        .image-back {
             transform: rotateY(180deg);
             z-index: 1;
         }
@@ -140,11 +138,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 10px;
             background: #ffffff;
             border-radius: 4px;
             border: 1px solid #d0d0d0;
-            flex-shrink: 0;
         }
 
         .pokemon-image {
@@ -156,15 +152,6 @@
             image-rendering: crisp-edges;
         }
 
-        .caption {
-            text-align: center;
-            font-weight: bold;
-            font-size: 14px;
-            color: #000;
-            margin-bottom: 0;
-            letter-spacing: 1px;
-            padding: 8px 0;
-        }
 
         .controls {
             display: flex;
@@ -202,55 +189,85 @@
         }
 
         button {
-            padding: 6px 4px;
-            background: linear-gradient(180deg, #dd2d2d 0%, #bb0000 100%);
+            padding: 8px 6px;
+            background: linear-gradient(180deg, #8b8b8b 0%, #5a5a5a 100%);
             color: #fff;
-            border: 2px solid #880000;
-            border-radius: 3px;
-            font-size: 11px;
+            border: 3px solid #3a3a3a;
+            border-radius: 0;
+            font-size: 10px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 0 #2a2a2a, 0 6px 8px rgba(0, 0, 0, 0.4);
+            text-transform: uppercase;
+            font-family: 'Press Start 2P', cursive;
+            letter-spacing: 1px;
+            position: relative;
         }
 
         button:hover {
-            background: linear-gradient(180deg, #ee4444 0%, #cc1111 100%);
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(180deg, #9a9a9a 0%, #6a6a6a 100%);
+            box-shadow: 0 4px 0 #2a2a2a, 0 8px 12px rgba(0, 0, 0, 0.5);
         }
 
         button:active {
-            transform: translateY(1px);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #2a2a2a, 0 3px 4px rgba(0, 0, 0, 0.3);
         }
 
         .details-section {
-            background: #ffffff;
+            background: linear-gradient(135deg, #a8c8e8 0%, #7fa8d8 50%, #5888c8 100%);
             border-radius: 4px;
-            border: 1px solid #d0d0d0;
-            font-size: 11px;
-            color: #333;
+            border: 3px solid #4a6a9a;
+            font-size: 9px;
+            color: #1a3a5a;
             padding: 12px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 10px;
+            align-content: start;
             overflow-y: auto;
+            font-family: 'Press Start 2P', cursive;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3), 0 0 10px rgba(90, 136, 200, 0.4);
+            position: relative;
+        }
+
+        .details-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.05) 0px,
+                rgba(0, 0, 0, 0.05) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
         }
 
         .detail-item {
-            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
             line-height: 1.4;
         }
 
         .detail-label {
             font-weight: bold;
-            color: #000;
+            color: #0a2a4a;
+            display: inline;
+            text-shadow: 0 0 3px rgba(168, 200, 232, 0.8);
         }
 
         .detail-value {
-            margin-left: 4px;
             word-break: break-word;
+            color: #2a4a6a;
+            display: inline;
+            margin-left: 4px;
         }
 
         .loading {
@@ -297,19 +314,25 @@
         </div>
 
         <div class="screen-container">
-            <div class="flip-card">
-                <!-- FRONT OF CARD -->
-                <div class="card-front">
+            <div class="image-flip-container">
+                <!-- FRONT OF IMAGE -->
+                <div class="image-front">
                     <div class="pokemon-image-area">
                         <img id="pokemonImage" class="pokemon-image" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png" alt="Pokémon">
                     </div>
-
-                    <div class="caption" id="caption">#001 – Bulbasaur</div>
                 </div>
 
-                <!-- BACK OF CARD -->
-                <div class="card-back">
+                <!-- BACK OF IMAGE (DETAILS) -->
+                <div class="image-back">
                     <div class="details-section" id="detailsSection">
+                        <div class="detail-item">
+                            <span class="detail-label">ID:</span>
+                            <span class="detail-value" id="idDetail">001</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Name:</span>
+                            <span class="detail-value" id="nameDetail">Bulbasaur</span>
+                        </div>
                         <div class="detail-item">
                             <span class="detail-label">Type:</span>
                             <span class="detail-value" id="typeDetail">-</span>
@@ -317,6 +340,26 @@
                         <div class="detail-item">
                             <span class="detail-label">Abilities:</span>
                             <span class="detail-value" id="abilitiesDetail">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Height:</span>
+                            <span class="detail-value" id="heightDetail">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Weight:</span>
+                            <span class="detail-value" id="weightDetail">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">HP:</span>
+                            <span class="detail-value" id="hpDetail">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Attack:</span>
+                            <span class="detail-value" id="attackDetail">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Defense:</span>
+                            <span class="detail-value" id="defenseDetail">-</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Sp.Atk:</span>
@@ -352,6 +395,24 @@
 
     <script>
         let currentPokemonId = 1;
+        let currentPokemonData = null;
+        let pokemonCryAudio = null;
+        let pokemonDescriptions = {};
+
+        async function loadDescriptions() {
+            try {
+                const response = await fetch('pokedescription.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                pokemonDescriptions = await response.json();
+                //debug(`Descriptions loaded: ${Object.keys(pokemonDescriptions).length} entries`);
+            } catch (error) {
+                debug(`Failed to load descriptions: ${error.message}`);
+            }
+        }
+
+        loadDescriptions();
 
         function debug(msg) {
             const panel = document.getElementById('debugPanel');
@@ -362,20 +423,43 @@
         }
 
         async function fetchPokemon(query) {
-            document.getElementById('caption').textContent = 'Loading...';
-
             try {
                 const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${String(query).toLowerCase()}`);
                 if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
                 const data = await response.json();
                 currentPokemonId = data.id;
+                currentPokemonData = data;
 
-                document.querySelector('.flip-card').classList.remove('flipped');
+                document.querySelector('.image-flip-container').classList.remove('flipped');
                 updateUI(data);
             } catch (error) {
                 debug(`ERROR: ${error.message}`);
-                document.getElementById('caption').textContent = 'Not found';
+                alert('Pokémon not found!');
+            }
+        }
+
+        function speakDetails() {
+            if (!currentPokemonData) return;
+            
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                
+                const id = String(currentPokemonData.id).padStart(3, '0');
+                const name = currentPokemonData.name.charAt(0).toUpperCase() + currentPokemonData.name.slice(1);
+                
+                const description = pokemonDescriptions[id] || 'No description available.';
+                
+                const text = `${name}. ${description}`;
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                debug('Text-to-speech not supported in this browser');
             }
         }
 
@@ -383,34 +467,43 @@
             const id = String(data.id).padStart(3, '0');
             const name = data.name.charAt(0).toUpperCase() + data.name.slice(1);
             
-            // Get the image URL - prefer official artwork
             const imageUrl = data.sprites.other?.['official-artwork']?.front_default 
                 || data.sprites.front_default 
                 || data.sprites.front_shiny;
 
             if (!imageUrl) {
-                document.getElementById('caption').textContent = `#${id} - ${name} (No Image)`;
                 return;
             }
             
             const img = document.getElementById('pokemonImage');
             img.src = imageUrl;
-            img.onload = () => {
-                document.getElementById('caption').textContent = `#${id} - ${name}`;
-            };
             img.onerror = () => {
                 img.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${data.id}.png`;
             };
 
+            document.getElementById('idDetail').textContent = id;
+            document.getElementById('nameDetail').textContent = name;
+
             const types = data.types?.map(t => t.type.name.charAt(0).toUpperCase() + t.type.name.slice(1)).join(', ') || '-';
             document.getElementById('typeDetail').textContent = types;
 
-            const abilities = data.abilities?.map(a => a.ability.name.charAt(0).toUpperCase() + a.ability.name.slice(1)).join(', ') || '-';
+            const abilities = data.abilities?.map(a => {
+                const abilityName = a.ability.name.replace(/-/g, ' ');
+                return abilityName.charAt(0).toUpperCase() + abilityName.slice(1);
+            }).join(', ') || '-';
             document.getElementById('abilitiesDetail').textContent = abilities;
 
+            const height = (data.height / 10).toFixed(1) + ' m';
+            const weight = (data.weight / 10).toFixed(1) + ' kg';
+            document.getElementById('heightDetail').textContent = height;
+            document.getElementById('weightDetail').textContent = weight;
+
             const stats = data.stats || [];
-            document.getElementById('spatkDetail').textContent = stats.find(s => s.stat.name === 'sp-atk')?.base_stat || '-';
-            document.getElementById('spdefDetail').textContent = stats.find(s => s.stat.name === 'sp-def')?.base_stat || '-';
+            document.getElementById('hpDetail').textContent = stats.find(s => s.stat.name === 'hp')?.base_stat || '-';
+            document.getElementById('attackDetail').textContent = stats.find(s => s.stat.name === 'attack')?.base_stat || '-';
+            document.getElementById('defenseDetail').textContent = stats.find(s => s.stat.name === 'defense')?.base_stat || '-';
+            document.getElementById('spatkDetail').textContent = stats.find(s => s.stat.name === 'special-attack')?.base_stat || '-';
+            document.getElementById('spdefDetail').textContent = stats.find(s => s.stat.name === 'special-defense')?.base_stat || '-';
             document.getElementById('speedDetail').textContent = stats.find(s => s.stat.name === 'speed')?.base_stat || '-';
         }
 
@@ -440,7 +533,18 @@
         }
 
         function toggleDetails() {
-            document.querySelector('.flip-card').classList.toggle('flipped');
+            const flipContainer = document.querySelector('.image-flip-container');
+            const isFlipping = !flipContainer.classList.contains('flipped');
+            
+            flipContainer.classList.toggle('flipped');
+            
+            if (isFlipping) {
+                setTimeout(() => {
+                    speakDetails();
+                }, 300);
+            } else {
+                window.speechSynthesis.cancel();
+            }
         }
 
         document.getElementById('searchInput').addEventListener('keypress', function (e) {
