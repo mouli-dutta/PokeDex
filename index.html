@@ -508,7 +508,6 @@
     const flipContainer = document.getElementById("flipContainer");
 
     function debug(msg) {
-      // Keep hidden by default, but logs to console.
       const panel = document.getElementById("debugPanel");
       const timestamp = new Date().toLocaleTimeString();
       panel.textContent += `[${timestamp}] ${msg}\n`;
@@ -516,7 +515,6 @@
     }
 
     async function loadDescriptions() {
-      // Optional file. If you don't have it, app still works.
       try {
         const response = await fetch("pokedescription.json");
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -567,7 +565,6 @@
       }
 
       try {
-        // Stop any previous cry
         if (cryAudio) {
           cryAudio.pause();
           cryAudio.currentTime = 0;
@@ -576,7 +573,6 @@
         cryAudio = new Audio(cryUrl);
         cryAudio.volume = 1.0;
 
-        // Play (may require user gesture — Search click is a user gesture ✅)
         cryAudio.play().catch(err => debug(`Cry play blocked/failed: ${err.message}`));
       } catch (e) {
         debug(`Cry play error: ${e.message}`);
@@ -615,10 +611,8 @@
         data.sprites?.front_shiny ||
         "";
 
-      // Safe image loading + fallback
       imgEl.onerror = () => {
-        imgEl.onerror = null; // prevent loop
-        // fallback to classic sprite if official artwork fails
+        imgEl.onerror = null; 
         const fallback = data.sprites?.front_default || data.sprites?.front_shiny || "";
         imgEl.src = fallback || "";
       };
@@ -695,7 +689,6 @@
       }
     }
 
-    // Events
     document.getElementById("searchBtn").addEventListener("click", searchPokemon);
     document.getElementById("prevBtn").addEventListener("click", previousPokemon);
     document.getElementById("nextBtn").addEventListener("click", nextPokemon);
@@ -706,7 +699,6 @@
       if (e.key === "Enter") searchPokemon();
     });
 
-    // Init
     loadDescriptions();
     fetchPokemon(1);
   </script>
