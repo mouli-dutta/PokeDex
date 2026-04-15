@@ -497,7 +497,7 @@
       }, 1500);
     });
 
-    let cryAudio = null;
+    let pokeAudio = null;
     let currentPokemonId = 1;
     let currentPokemonData = null;
     let pokemonDescriptions = {};
@@ -556,24 +556,24 @@
       }
     }
 
-    function playLatestCry(data) {
-      const cryUrl = data?.cries?.latest || `https://play.pokemonshowdown.com/audio/cries/${data.name}.ogg`;
+    function playPokemonSound(data) {
+      const pokeSoundURL = data?.cries?.latest || `https://play.pokemonshowdown.com/audio/cries/${data.name}.ogg`;
       
-      if (!cryUrl) {
+      if (!pokeSoundURL) {
         debug("No latest sound found for this Pokémon");
         return;
       }
 
       try {
-        if (cryAudio) {
-          cryAudio.pause();
-          cryAudio.currentTime = 0;
+        if (pokeAudio) {
+          pokeAudio.pause();
+          pokeAudio.currentTime = 0;
         }
 
-        cryAudio = new Audio(cryUrl);
-        cryAudio.volume = 1.0;
+        pokeAudio = new Audio(pokeSoundURL);
+        pokeAudio.volume = 1.0;
 
-        cryAudio.play().catch(err => debug(`Cry play blocked/failed: ${err.message}`));
+        pokeAudio.play().catch(err => debug(`Cry play blocked/failed: ${err.message}`));
       } catch (e) {
         debug(`Cry play error: ${e.message}`);
       }
@@ -654,28 +654,28 @@
       if (!value) return;
 
       const data = await fetchPokemon(value);
-      if (data) playLatestCry(data);
+      if (data) playPokemonSound(data);
     }
 
     async function previousPokemon() {
       if (currentPokemonId > 1) {
         currentPokemonId--;
         const data = await fetchPokemon(currentPokemonId);
-        if (data) playLatestCry(data);
+        if (data) playPokemonSound(data);
       }
     }
 
     async function nextPokemon() {
       currentPokemonId++;
       const data = await fetchPokemon(currentPokemonId);
-      if (data) playLatestCry(data);
+      if (data) playPokemonSound(data);
     }
 
     async function randomPokemon() {
       const max = 1025;
       currentPokemonId = Math.floor(Math.random() * max) + 1;
       const data = await fetchPokemon(currentPokemonId);
-      if (data) playLatestCry(data);
+      if (data) playPokemonSound(data);
     }
 
     function toggleDetails() {
