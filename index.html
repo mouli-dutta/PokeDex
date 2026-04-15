@@ -362,6 +362,7 @@
   </div>
 
   <script>
+    let cryAudio = null;
     let currentPokemonId = 1;
     let currentPokemonData = null;
     let pokemonDescriptions = {};
@@ -401,22 +402,48 @@
 
         const safeQuery = String(query).trim().toLowerCase();
         const response = await fetch(`${API_BASE}${encodeURIComponent(safeQuery)}`);
-
         if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
         const data = await response.json();
         currentPokemonId = data.id;
         currentPokemonData = data;
 
-        // Ensure front view when loading new Pokémon
         flipContainer.classList.remove("flipped");
-
         updateUI(data);
+
+        return data; 
+
       } catch (error) {
-        debug(`ERROR: ${error.message}`);
-        alert("Pokémon not found!");
+          debug(`ERROR: ${error.message}`);
+          alert("Pokémon not found!");
+          return null;
       } finally {
-        setLoading(false);
+          setLoading(false);
+      }
+    }
+
+    function playLatestCry(data) {
+      const cryUrl = data?.cries?.latest || `https://play.pokemonshowdown.com/audio/cries/${data.name}.ogg`;
+      
+      if (!cryUrl) {
+        debug("No latest sound found for this Pokémon");
+        return;
+      }
+
+      try {
+        // Stop any previous cry
+        if (cryAudio) {
+          cryAudio.pause();
+          cryAudio.currentTime = 0;
+        }
+
+        cryAudio = new Audio(cryUrl);
+        cryAudio.volume = 1.0;
+
+        // Play (may require user gesture — Search click is a user gesture ✅)
+        cryAudio.play().catch(err => debug(`Cry play blocked/failed: ${err.message}`));
+      } catch (e) {
+        debug(`Cry play error: ${e.message}`);
       }
     }
 
@@ -492,31 +519,36 @@
       document.getElementById("speedDetail").textContent = getStat("speed");
     }
 
-    function searchPokemon() {
+    async function searchPokemon() {
       const input = document.getElementById("searchInput");
       const value = input.value.trim();
-      if (value) fetchPokemon(value);
+      if (!value) return;
+
+      const data = await fetchPokemon(value);
+      if (data) playLatestCry(data);
     }
 
-    function previousPokemon() {
+    async function previousPokemon() {
       if (currentPokemonId > 1) {
         currentPokemonId--;
-        fetchPokemon(currentPokemonId);
+        const data = await fetchPokemon(currentPokemonId);
+        if (data) playLatestCry(data);
       }
     }
 
-    function nextPokemon() {
+    async function nextPokemon() {
       currentPokemonId++;
-      fetchPokemon(currentPokemonId);
+      const data = await fetchPokemon(currentPokemonId);
+      if (data) playLatestCry(data);
     }
 
-    function randomPokemon() {
-      // You can change this max if you want
+    async function randomPokemon() {
       const max = 1025;
       const randomId = Math.floor(Math.random() * max) + 1;
       currentPokemonId = randomId;
-      fetchPokemon(randomId);
-    }
+      const data = await fetchPokemon(randomId);
+      if (data) playLatestCry(data);
+    } 
 
     function toggleDetails() {
       const isFlippingToBack = !flipContainer.classList.contains("flipped");
