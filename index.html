@@ -23,6 +23,70 @@
       padding: 10px;
     }
 
+    /* ===== Pokédex Boot Loader ===== */
+    #bootLoader {
+      position: fixed;
+      transition: opacity 0.5s ease;
+      inset: 0;
+      background: radial-gradient(circle, #222 0%, #000 70%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .boot-pokeball {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(#d30000 50%, white 50%);
+      border: 4px solid #000;
+      position: relative;
+      animation: bootShake 0.8s infinite;
+    }
+
+    .boot-pokeball::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: black;
+      transform: translateY(-50%);
+    }
+
+    .boot-pokeball::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border: 4px solid black;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .boot-text {
+      margin-top: 18px;
+      font-size: 10px;
+      color: #fff;
+      font-family: 'Press Start 2P', cursive;
+      letter-spacing: 1px;
+      opacity: 0.85;
+    }
+
+    @keyframes bootShake {
+      0%   { transform: rotate(0deg); }
+      25%  { transform: rotate(-12deg); }
+      50%  { transform: rotate(12deg); }
+      75%  { transform: rotate(-12deg); }
+      100% { transform: rotate(0deg); }
+    }
+
     @media (max-width: 768px) { body { padding: 5px; } }
 
     .device-container {
@@ -300,10 +364,64 @@
     .detail-value { word-break: break-word; color: #2a4a6a; display: inline; margin-left: 4px; }
 
     .debug-info { display: none; white-space: pre-wrap; }
+
+    /* ===== Mini Bouncing Pokéballs (Loading Overlay) ===== */
+    .pokeball-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .mini-pokeball {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(#d30000 50%, white 50%);
+      border: 2px solid #000;
+      position: relative;
+      animation: bounce 0.6s ease-in-out infinite;
+    }
+
+    .mini-pokeball:nth-child(2) { animation-delay: 0.1s; }
+    .mini-pokeball:nth-child(3) { animation-delay: 0.2s; }
+
+    .mini-pokeball::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: black;
+      transform: translateY(-50%);
+    }
+
+    .mini-pokeball::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      background: white;
+      border: 2px solid black;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    @keyframes bounce {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(-8px); }
+      100% { transform: translateY(0); }
+    }
   </style>
 </head>
 
 <body>
+  <div id="bootLoader">
+    <div class="boot-pokeball"></div>
+    <div class="boot-text">Initializing Pokédex...</div>
+  </div>
+
   <div class="debug-info" id="debugPanel"></div>
 
   <div class="device-container">
@@ -321,7 +439,13 @@
         <!-- FRONT -->
         <div class="image-front">
           <div class="pokemon-image-area">
-            <div class="loading" id="loadingOverlay">Loading…</div>
+            <div class="loading" id="loadingOverlay">
+              <div class="pokeball-row">
+                <div class="mini-pokeball"></div>
+                <div class="mini-pokeball"></div>
+                <div class="mini-pokeball"></div>
+              </div>
+            </div>
             <img id="pokemonImage" class="pokemon-image" src="" alt="Pokémon" />
           </div>
         </div>
@@ -362,6 +486,17 @@
   </div>
 
   <script>
+    const ACTION_DELAY_MS = 700;
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    const bootLoader = document.getElementById("bootLoader");
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        bootLoader.style.opacity = "0";
+        setTimeout(() => bootLoader.remove(), 1000);
+      }, 1500);
+    });
+
     let cryAudio = null;
     let currentPokemonId = 1;
     let currentPokemonData = null;
@@ -400,6 +535,8 @@
       try {
         setLoading(true);
 
+        await sleep(ACTION_DELAY_MS);
+
         const safeQuery = String(query).trim().toLowerCase();
         const response = await fetch(`${API_BASE}${encodeURIComponent(safeQuery)}`);
         if (!response.ok) throw new Error(`API Error: ${response.status}`);
@@ -411,14 +548,13 @@
         flipContainer.classList.remove("flipped");
         updateUI(data);
 
-        return data; 
-
+        return data;
       } catch (error) {
-          debug(`ERROR: ${error.message}`);
-          alert("Pokémon not found!");
-          return null;
+        debug(`ERROR: ${error.message}`);
+        alert("Pokémon not found!");
+        return null;
       } finally {
-          setLoading(false);
+        setLoading(false);
       }
     }
 
@@ -520,8 +656,7 @@
     }
 
     async function searchPokemon() {
-      const input = document.getElementById("searchInput");
-      const value = input.value.trim();
+      const value = document.getElementById("searchInput").value.trim();
       if (!value) return;
 
       const data = await fetchPokemon(value);
@@ -544,11 +679,10 @@
 
     async function randomPokemon() {
       const max = 1025;
-      const randomId = Math.floor(Math.random() * max) + 1;
-      currentPokemonId = randomId;
-      const data = await fetchPokemon(randomId);
+      currentPokemonId = Math.floor(Math.random() * max) + 1;
+      const data = await fetchPokemon(currentPokemonId);
       if (data) playLatestCry(data);
-    } 
+    }
 
     function toggleDetails() {
       const isFlippingToBack = !flipContainer.classList.contains("flipped");
