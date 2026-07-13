@@ -922,7 +922,7 @@
         return data;
       } catch (error) {
         debug(`ERROR: ${error.message}`);
-        alert("Pokémon not found!");
+        alert("The Pokédex has no data on that Pokémon.\nPlease check the name or ID and try again.");
         return null;
       } finally {
         setLoading(false);
@@ -934,20 +934,17 @@
     }
 
     function getCryCandidates(data) {
-      const candidates = [];
-      if (data?.cries?.latest) candidates.push(data.cries.latest);
-      if (data?.cries?.legacy) candidates.push(data.cries.legacy);
-      if (data?.id) {
-        candidates.push(`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${data.id}.ogg`);
-        candidates.push(`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/legacy/${data.id}.ogg`);
-      }
-      if (data?.name) {
-        const shortName = normalizeShowdownName(data.name);
-        candidates.push(`https://play.pokemonshowdown.com/audio/cries/${shortName}.mp3`);
-        candidates.push(`https://play.pokemonshowdown.com/audio/cries/${shortName}.ogg`);
-      }
-      // de-duplicate while preserving order
-      return [...new Set(candidates)];
+      const { id, name, cries } = data || {};
+      const shortName = name && normalizeShowdownName(name);
+
+      return [...new Set([
+        shortName && `https://play.pokemonshowdown.com/audio/cries/${shortName}.ogg`,
+        shortName && `https://play.pokemonshowdown.com/audio/cries/${shortName}.mp3`,
+        cries?.latest,
+        cries?.legacy,
+        id && `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`,
+        id && `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/legacy/${id}.ogg`,
+      ].filter(Boolean))];
     }
 
     function playPokemonSound(data) {
@@ -1051,8 +1048,27 @@
     }
 
     async function searchPokemon() {
-      const value = document.getElementById("searchInput").value.trim();
+      let value = document.getElementById("searchInput").value.trim().toLowerCase();
       if (!value) return;
+
+      const defaultForms = {
+        deoxys: "deoxys-normal",
+        wormadam: "wormadam-plant",
+        giratina: "giratina-altered",
+        shaymin: "shaymin-land",
+        basculin: "basculin-red-striped",
+        darmanitan: "darmanitan-standard",
+        tornadus: "tornadus-incarnate",
+        thundurus: "thundurus-incarnate",
+        landorus: "landorus-incarnate",
+        enamorus: "enamorus-incarnate",
+        urshifu: "urshifu-single-strike",
+        indeedee: "indeedee-male",
+        toxtricity: "toxtricity-amped",
+      };
+
+      value = defaultForms[value] || value;
+
       const data = await fetchPokemon(value);
       if (data) playPokemonSound(data);
     }
@@ -1062,14 +1078,18 @@
         currentPokemonId--;
         const data = await fetchPokemon(currentPokemonId);
         if (data) playPokemonSound(data);
+      } else {
+        alert("That's the first Pokémon—can't go back!");
       }
     }
 
     async function nextPokemon() {
-      if (currentPokemonId < 1026) {
+      if (currentPokemonId < 1025) {
         currentPokemonId++;
         const data = await fetchPokemon(currentPokemonId);
         if (data) playPokemonSound(data);
+      } else {
+        alert("That's the last Pokémon—can't go forward!");
       }
     }
 
@@ -1263,10 +1283,6 @@
     }
 
     async function identifyPokemonImage(dataUrl) {
-      if (!MODEL_ID || MODEL_ID.startsWith("YOUR-USERNAME")) {
-        throw new Error("Identify model not configured — see SETUP.md, then set MODEL_ID.");
-      }
-
       setScanStatus("Loading model…");
       const classifier = await getClassifier();
 
